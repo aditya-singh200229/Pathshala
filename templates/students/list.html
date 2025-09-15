@@ -51,8 +51,14 @@
                         <td>₹{{ student.registration_fees }}</td>
                         <td>{{ student.created_at|date:"M d, Y" }}</td>
                         <td>
-                            <a href="{% url 'student_detail' student.id %}" class="btn btn-sm btn-info">
+                            <a href="{% url 'student_detail' student.id %}" class="btn btn-sm btn-info me-1">
                                 <i class="fas fa-eye"></i> View
+                            </a>
+                            <a href="{% url 'student_update' student.id %}" class="btn btn-sm btn-warning me-1">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                            <a href="{% url 'student_delete' student.id %}" class="btn btn-sm btn-danger">
+                                <i class="fas fa-trash"></i> Delete
                             </a>
                         </td>
                     </tr>

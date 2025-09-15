@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Payment - {{ payment.student.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Edit Payment - {{ payment.student.name }}</h2>
+    <a href="{% url 'student_detail' payment.student.id %}" class="btn btn-secondary">Back to Student</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="amount" class="form-label">Amount (Rs) *</label>
+                        <input type="number" class="form-control" id="amount" name="amount" value="{{ payment.amount }}" required step="0.01">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="payment_date" class="form-label">Date *</label>
+                        <input type="date" class="form-control" id="payment_date" name="payment_date" value="{{ payment.payment_date|date:'Y-m-d' }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="payment_mode" class="form-label">Payment Mode *</label>
+                        <select class="form-control" id="payment_mode" name="payment_mode" required>
+                            <option value="Cash" {% if payment.payment_mode == 'Cash' %}selected{% endif %}>Cash</option>
+                            <option value="Online" {% if payment.payment_mode == 'Online' %}selected{% endif %}>Online</option>
+                            <option value="Card" {% if payment.payment_mode == 'Card' %}selected{% endif %}>Card</option>
+                            <option value="UPI" {% if payment.payment_mode == 'UPI' %}selected{% endif %}>UPI</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="payment_type" class="form-label">Payment Type *</label>
+                        <select class="form-control" id="payment_type" name="payment_type" required>
+                            <option value="Registration" {% if payment.payment_type == 'Registration' %}selected{% endif %}>Registration Fees</option>
+                            <option value="Admission" {% if payment.payment_type == 'Admission' %}selected{% endif %}>Admission Fees</option>
+                            <option value="Locker" {% if payment.payment_type == 'Locker' %}selected{% endif %}>Locker Fees</option>
+                            <option value="Monthly" {% if payment.payment_type == 'Monthly' %}selected{% endif %}>Monthly Fees</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="remarks" class="form-label">Remarks</label>
+                        <textarea class="form-control" id="remarks" name="remarks" rows="4" placeholder="Optional remarks about this payment">{{ payment.remarks }}</textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-save me-2"></i>Update Payment
+                </button>
+                <a href="{% url 'student_detail' payment.student.id %}" class="btn btn-secondary btn-lg ms-2">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -7,6 +7,12 @@
     <h2>{{ student.name }}</h2>
     <div>
         <a href="{% url 'students_list' %}" class="btn btn-secondary">Back to Students</a>
+        <a href="{% url 'student_update' student.id %}" class="btn btn-warning ms-2">
+            <i class="fas fa-edit me-2"></i>Edit Student
+        </a>
+        <a href="{% url 'student_delete' student.id %}" class="btn btn-danger ms-1">
+            <i class="fas fa-trash me-2"></i>Delete
+        </a>
         <div class="btn-group ms-2" role="group">
             <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
                 <i class="fas fa-plus me-2"></i>Add
@@ -113,6 +119,7 @@
                                 <th>Security Fees</th>
                                 <th>Monthly Fees</th>
                                 <th>Required</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -128,6 +135,14 @@
                                     {% else %}
                                         <span class="badge bg-secondary">No</span>
                                     {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'locker_update' locker.id %}" class="btn btn-sm btn-warning me-1">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'locker_delete' locker.id %}" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -157,6 +172,7 @@
                                 <th>Type</th>
                                 <th>Mode</th>
                                 <th>Remarks</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -167,6 +183,14 @@
                                 <td><span class="badge bg-primary">{{ payment.payment_type }}</span></td>
                                 <td>{{ payment.payment_mode }}</td>
                                 <td>{{ payment.remarks|default:"-" }}</td>
+                                <td>
+                                    <a href="{% url 'payment_update' payment.id %}" class="btn btn-sm btn-warning me-1">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'payment_delete' payment.id %}" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>

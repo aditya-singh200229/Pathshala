@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Student - {{ student.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Edit Student - {{ student.name }}</h2>
+    <a href="{% url 'student_detail' student.id %}" class="btn btn-secondary">Back to Student Details</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="row">
+                <!-- Personal Information -->
+                <div class="col-md-6">
+                    <h5 class="border-bottom pb-2 mb-3">Personal Information</h5>
+                    
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Name *</label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ student.name }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email *</label>
+                        <input type="email" class="form-control" id="email" name="email" value="{{ student.email }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="mobile" class="form-label">Mobile *</label>
+                        <input type="tel" class="form-control" id="mobile" name="mobile" value="{{ student.mobile }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="date_of_birth" class="form-label">Date of Birth (MM/DD/YYYY) *</label>
+                        <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" value="{{ student.date_of_birth|date:'Y-m-d' }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="aadhaar_number" class="form-label">Aadhaar Number *</label>
+                        <input type="text" class="form-control" id="aadhaar_number" name="aadhaar_number" value="{{ student.aadhaar_number }}" pattern="[0-9]{12}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Address *</label>
+                        <textarea class="form-control" id="address" name="address" rows="3" required>{{ student.address }}</textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="photo" class="form-label">Photo Upload</label>
+                        <input type="file" class="form-control" id="photo" name="photo" accept="image/*">
+                        {% if student.photo %}
+                        <small class="text-muted">Current photo: <a href="{{ student.photo.url }}" target="_blank">View</a></small>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Parent Information & Registration -->
+                <div class="col-md-6">
+                    <h5 class="border-bottom pb-2 mb-3">Parent Information</h5>
+                    
+                    <div class="mb-3">
+                        <label for="father_name" class="form-label">Father Name *</label>
+                        <input type="text" class="form-control" id="father_name" name="father_name" value="{{ student.father_name }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="mother_name" class="form-label">Mother Name *</label>
+                        <input type="text" class="form-control" id="mother_name" name="mother_name" value="{{ student.mother_name }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="parent_mobile" class="form-label">Parent Mobile Number *</label>
+                        <input type="tel" class="form-control" id="parent_mobile" name="parent_mobile" value="{{ student.parent_mobile }}" required>
+                    </div>
+                    
+                    <h5 class="border-bottom pb-2 mb-3 mt-4">Registration Details</h5>
+                    
+                    <div class="mb-3">
+                        <label for="registration_fees" class="form-label">Registration Fees (Rs)</label>
+                        <input type="number" class="form-control" id="registration_fees" name="registration_fees" value="{{ student.registration_fees }}" step="0.01">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select" id="status" name="status">
+                            <option value="Active" {% if student.status == 'Active' %}selected{% endif %}>Active</option>
+                            <option value="Inactive" {% if student.status == 'Inactive' %}selected{% endif %}>Inactive</option>
+                            <option value="Expiring Soon" {% if student.status == 'Expiring Soon' %}selected{% endif %}>Expiring Soon</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-save me-2"></i>Update Student
+                </button>
+                <a href="{% url 'student_detail' student.id %}" class="btn btn-secondary btn-lg ms-2">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

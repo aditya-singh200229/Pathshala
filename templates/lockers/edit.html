@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Locker - {{ locker.locker_number }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Edit Locker - {{ locker.locker_number }} ({{ locker.student.name }})</h2>
+    <a href="{% url 'student_detail' locker.student.id %}" class="btn btn-secondary">Back to Student</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="required" name="required" {% if locker.required %}checked{% endif %}>
+                            <label class="form-check-label" for="required">
+                                <strong>Locker Required (Yes/No)</strong>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="security_fees" class="form-label">Security Fees (Rs)</label>
+                        <input type="number" class="form-control" id="security_fees" name="security_fees" value="{{ locker.security_fees }}" step="0.01">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="start_date" class="form-label">Start Date *</label>
+                        <input type="date" class="form-control" id="start_date" name="start_date" value="{{ locker.start_date|date:'Y-m-d' }}" required>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="end_date" class="form-label">End Date *</label>
+                        <input type="date" class="form-control" id="end_date" name="end_date" value="{{ locker.end_date|date:'Y-m-d' }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="locker_number" class="form-label">Locker Number *</label>
+                        <input type="text" class="form-control" id="locker_number" name="locker_number" value="{{ locker.locker_number }}" required placeholder="e.g., L001">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="monthly_fees" class="form-label">Monthly Fees (Rs)</label>
+                        <input type="number" class="form-control" id="monthly_fees" name="monthly_fees" value="{{ locker.monthly_fees }}" step="0.01">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-save me-2"></i>Update Locker
+                </button>
+                <a href="{% url 'student_detail' locker.student.id %}" class="btn btn-secondary btn-lg ms-2">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

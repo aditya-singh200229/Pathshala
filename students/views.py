@@ -117,6 +117,52 @@ def student_create(request):
     return render(request, 'students/create.html')
 
 @login_required
+def student_update(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    
+    if request.method == 'POST':
+        try:
+            student.name = request.POST['name']
+            student.email = request.POST['email']
+            student.mobile = request.POST['mobile']
+            student.date_of_birth = request.POST['date_of_birth']
+            student.aadhaar_number = request.POST['aadhaar_number']
+            student.address = request.POST['address']
+            student.father_name = request.POST['father_name']
+            student.mother_name = request.POST['mother_name']
+            student.parent_mobile = request.POST['parent_mobile']
+            student.registration_fees = request.POST.get('registration_fees', 200.00)
+            student.status = request.POST['status']
+            
+            if request.FILES.get('photo'):
+                student.photo = request.FILES['photo']
+                
+            student.save()
+            messages.success(request, 'Student updated successfully!')
+            return redirect('student_detail', student_id=student.id)
+        except Exception as e:
+            messages.error(request, f'Error updating student: {str(e)}')
+    
+    context = {'student': student}
+    return render(request, 'students/edit.html', context)
+
+@login_required
+def student_delete(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    
+    if request.method == 'POST':
+        try:
+            student.delete()
+            messages.success(request, 'Student deleted successfully!')
+            return redirect('students_list')
+        except Exception as e:
+            messages.error(request, f'Error deleting student: {str(e)}')
+            return redirect('student_detail', student_id=student_id)
+    
+    context = {'student': student}
+    return render(request, 'students/confirm_delete.html', context)
+
+@login_required
 def admission_create(request, student_id):
     student = get_object_or_404(Student, id=student_id)
     
@@ -164,6 +210,45 @@ def locker_create(request, student_id):
     return render(request, 'lockers/create.html', context)
 
 @login_required
+def locker_update(request, locker_id):
+    locker = get_object_or_404(Locker, id=locker_id)
+    
+    if request.method == 'POST':
+        try:
+            locker.required = request.POST.get('required') == 'on'
+            locker.security_fees = request.POST.get('security_fees', 300.00)
+            locker.start_date = request.POST['start_date']
+            locker.end_date = request.POST['end_date']
+            locker.locker_number = request.POST['locker_number']
+            locker.monthly_fees = request.POST.get('monthly_fees', 100.00)
+            
+            locker.save()
+            messages.success(request, 'Locker updated successfully!')
+            return redirect('student_detail', student_id=locker.student.id)
+        except Exception as e:
+            messages.error(request, f'Error updating locker: {str(e)}')
+    
+    context = {'locker': locker, 'student': locker.student}
+    return render(request, 'lockers/edit.html', context)
+
+@login_required
+def locker_delete(request, locker_id):
+    locker = get_object_or_404(Locker, id=locker_id)
+    student_id = locker.student.id
+    
+    if request.method == 'POST':
+        try:
+            locker.delete()
+            messages.success(request, 'Locker removed successfully!')
+            return redirect('student_detail', student_id=student_id)
+        except Exception as e:
+            messages.error(request, f'Error deleting locker: {str(e)}')
+            return redirect('student_detail', student_id=student_id)
+    
+    context = {'locker': locker, 'student': locker.student}
+    return render(request, 'lockers/confirm_delete.html', context)
+
+@login_required
 def payment_create(request, student_id):
     student = get_object_or_404(Student, id=student_id)
     
@@ -184,6 +269,44 @@ def payment_create(request, student_id):
     
     context = {'student': student}
     return render(request, 'payments/create.html', context)
+
+@login_required
+def payment_update(request, payment_id):
+    payment = get_object_or_404(Payment, id=payment_id)
+    
+    if request.method == 'POST':
+        try:
+            payment.amount = request.POST['amount']
+            payment.payment_date = request.POST['payment_date']
+            payment.payment_mode = request.POST['payment_mode']
+            payment.payment_type = request.POST['payment_type']
+            payment.remarks = request.POST.get('remarks', '')
+            
+            payment.save()
+            messages.success(request, 'Payment updated successfully!')
+            return redirect('student_detail', student_id=payment.student.id)
+        except Exception as e:
+            messages.error(request, f'Error updating payment: {str(e)}')
+    
+    context = {'payment': payment, 'student': payment.student}
+    return render(request, 'payments/edit.html', context)
+
+@login_required
+def payment_delete(request, payment_id):
+    payment = get_object_or_404(Payment, id=payment_id)
+    student_id = payment.student.id
+    
+    if request.method == 'POST':
+        try:
+            payment.delete()
+            messages.success(request, 'Payment deleted successfully!')
+            return redirect('student_detail', student_id=student_id)
+        except Exception as e:
+            messages.error(request, f'Error deleting payment: {str(e)}')
+            return redirect('student_detail', student_id=student_id)
+    
+    context = {'payment': payment, 'student': payment.student}
+    return render(request, 'payments/confirm_delete.html', context)
 
 @login_required
 def contact_leads(request):

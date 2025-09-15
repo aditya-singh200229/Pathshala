@@ -121,12 +121,15 @@
                     </div>
                 </div>
             </nav>
-            
-            <!-- Main content -->
             <main class="col-md-9 ms-sm-auto col-lg-10 main-content">
+            {% else %}
+            <main class="col-12">
+            {% endif %}
+                {% if user.is_authenticated %}
                 <div class="pt-3 pb-2 mb-3 border-bottom">
                     <h1 class="h2">{% block title %}Dashboard{% endblock %}</h1>
                 </div>
+                {% endif %}
                 
                 {% if messages %}
                     {% for message in messages %}
@@ -140,12 +143,6 @@
                 {% block content %}
                 {% endblock %}
             </main>
-            {% else %}
-            <main class="col-12">
-                {% block content %}
-                {% endblock %}
-            </main>
-            {% endif %}
         </div>
     </div>
     

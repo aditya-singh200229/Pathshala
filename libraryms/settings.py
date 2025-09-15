@@ -29,6 +29,12 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+# CSRF trusted origins
+CSRF_TRUSTED_ORIGINS = [
+    'https://3e199f32-57ac-49ef-8316-8c068bb8da4f-00-1w4vq19hquwh0.kirk.replit.dev',
+    'https://*.replit.dev',
+]
+
 
 # Application definition
 

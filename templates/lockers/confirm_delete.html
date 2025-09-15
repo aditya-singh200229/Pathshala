@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Locker - {{ locker.locker_number }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Delete Locker Assignment</h2>
+    <a href="{% url 'student_detail' locker.student.id %}" class="btn btn-secondary">Back to Student</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="alert alert-warning" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Warning!</strong> This action cannot be undone.
+        </div>
+        
+        <h5>Are you sure you want to delete this locker assignment?</h5>
+        
+        <div class="mt-4 p-3 bg-light rounded">
+            <h6><strong>Locker Information:</strong></h6>
+            <p><strong>Student:</strong> {{ locker.student.name }}</p>
+            <p><strong>Locker Number:</strong> {{ locker.locker_number }}</p>
+            <p><strong>Period:</strong> {{ locker.start_date|date:"M d, Y" }} to {{ locker.end_date|date:"M d, Y" }}</p>
+            <p><strong>Security Fees:</strong> ₹{{ locker.security_fees }}</p>
+            <p><strong>Monthly Fees:</strong> ₹{{ locker.monthly_fees }}</p>
+            <p><strong>Required:</strong> {% if locker.required %}Yes{% else %}No{% endif %}</p>
+        </div>
+        
+        <form method="post" class="mt-4">
+            {% csrf_token %}
+            <div class="text-center">
+                <button type="submit" class="btn btn-danger btn-lg me-3">
+                    <i class="fas fa-trash me-2"></i>Yes, Delete Locker
+                </button>
+                <a href="{% url 'student_detail' locker.student.id %}" class="btn btn-secondary btn-lg">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
