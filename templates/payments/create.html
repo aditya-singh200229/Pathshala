@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Record Payment - {{ student.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Record Payment - {{ student.name }}</h2>
+    <a href="{% url 'student_detail' student.id %}" class="btn btn-secondary">Back to Student</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="amount" class="form-label">Amount (Rs) *</label>
+                        <input type="number" class="form-control" id="amount" name="amount" required step="0.01">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="payment_date" class="form-label">Date *</label>
+                        <input type="date" class="form-control" id="payment_date" name="payment_date" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="payment_mode" class="form-label">Payment Mode *</label>
+                        <select class="form-control" id="payment_mode" name="payment_mode" required>
+                            <option value="Cash" selected>Cash</option>
+                            <option value="Online">Online</option>
+                            <option value="Card">Card</option>
+                            <option value="UPI">UPI</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="payment_type" class="form-label">Payment Type *</label>
+                        <select class="form-control" id="payment_type" name="payment_type" required>
+                            <option value="Registration" selected>Registration Fees</option>
+                            <option value="Admission">Admission Fees</option>
+                            <option value="Locker">Locker Fees</option>
+                            <option value="Monthly">Monthly Fees</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="remarks" class="form-label">Remarks</label>
+                        <textarea class="form-control" id="remarks" name="remarks" rows="4" placeholder="Optional remarks about this payment"></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-credit-card me-2"></i>Record Payment
+                </button>
+                <a href="{% url 'student_detail' student.id %}" class="btn btn-secondary btn-lg ms-2">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

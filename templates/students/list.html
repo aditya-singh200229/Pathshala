@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block title %}Students List{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Students 
+        {% if filter_type == 'active' %}(Active)
+        {% elif filter_type == 'inactive' %}(Inactive)
+        {% elif filter_type == 'expiring' %}(Expiring Soon)
+        {% elif filter_type == 'reserved' %}(Reserved)
+        {% elif filter_type == 'non_reserved' %}(Non-Reserved)
+        {% else %}(All)
+        {% endif %}
+    </h2>
+    <a href="{% url 'student_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Add Student
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if students %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Mobile</th>
+                        <th>Status</th>
+                        <th>Registration Fees</th>
+                        <th>Date Added</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr>
+                        <td>
+                            <strong>{{ student.name }}</strong><br>
+                            <small class="text-muted">{{ student.aadhaar_number }}</small>
+                        </td>
+                        <td>{{ student.email }}</td>
+                        <td>{{ student.mobile }}</td>
+                        <td>
+                            <span class="badge {% if student.status == 'Active' %}bg-success{% elif student.status == 'Inactive' %}bg-danger{% else %}bg-warning{% endif %}">
+                                {{ student.status }}
+                            </span>
+                        </td>
+                        <td>₹{{ student.registration_fees }}</td>
+                        <td>{{ student.created_at|date:"M d, Y" }}</td>
+                        <td>
+                            <a href="{% url 'student_detail' student.id %}" class="btn btn-sm btn-info">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if students.has_other_pages %}
+        <nav aria-label="Students pagination">
+            <ul class="pagination justify-content-center">
+                {% if students.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ students.previous_page_number }}&filter={{ filter_type }}">Previous</a>
+                    </li>
+                {% endif %}
+                
+                {% for page_num in students.paginator.page_range %}
+                    {% if page_num == students.number %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                    {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_num }}&filter={{ filter_type }}">{{ page_num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if students.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ students.next_page_number }}&filter={{ filter_type }}">Next</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+            <h4>No students found</h4>
+            <p class="text-muted">Start by adding your first student to the system.</p>
+            <a href="{% url 'student_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Add First Student
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

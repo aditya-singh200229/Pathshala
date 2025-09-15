@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ student.name }} - Details{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>{{ student.name }}</h2>
+    <div>
+        <a href="{% url 'students_list' %}" class="btn btn-secondary">Back to Students</a>
+        <div class="btn-group ms-2" role="group">
+            <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
+                <i class="fas fa-plus me-2"></i>Add
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{% url 'admission_create' student.id %}">Admission Details</a></li>
+                <li><a class="dropdown-item" href="{% url 'locker_create' student.id %}">Locker Assignment</a></li>
+                <li><a class="dropdown-item" href="{% url 'payment_create' student.id %}">Payment Record</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Student Information -->
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-user me-2"></i>Student Information</h5>
+            </div>
+            <div class="card-body">
+                {% if student.photo %}
+                <div class="text-center mb-3">
+                    <img src="{{ student.photo.url }}" class="img-thumbnail" style="max-width: 150px;">
+                </div>
+                {% endif %}
+                
+                <p><strong>Email:</strong> {{ student.email }}</p>
+                <p><strong>Mobile:</strong> {{ student.mobile }}</p>
+                <p><strong>Date of Birth:</strong> {{ student.date_of_birth|date:"M d, Y" }}</p>
+                <p><strong>Aadhaar:</strong> {{ student.aadhaar_number }}</p>
+                <p><strong>Address:</strong> {{ student.address }}</p>
+                <p><strong>Status:</strong> 
+                    <span class="badge {% if student.status == 'Active' %}bg-success{% elif student.status == 'Inactive' %}bg-danger{% else %}bg-warning{% endif %}">
+                        {{ student.status }}
+                    </span>
+                </p>
+                <p><strong>Registration Fees:</strong> ₹{{ student.registration_fees }}</p>
+                
+                <hr>
+                <h6>Parent Information</h6>
+                <p><strong>Father:</strong> {{ student.father_name }}</p>
+                <p><strong>Mother:</strong> {{ student.mother_name }}</p>
+                <p><strong>Parent Mobile:</strong> {{ student.parent_mobile }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Admissions -->
+    <div class="col-md-8 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="fas fa-graduation-cap me-2"></i>Admission Details</h5>
+                <a href="{% url 'admission_create' student.id %}" class="btn btn-sm btn-primary">Add Admission</a>
+            </div>
+            <div class="card-body">
+                {% if admissions %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Seat No.</th>
+                                <th>Period</th>
+                                <th>Hours</th>
+                                <th>Slot</th>
+                                <th>Type</th>
+                                <th>Fees</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for admission in admissions %}
+                            <tr>
+                                <td>{{ admission.seat_number }}</td>
+                                <td>{{ admission.start_date|date:"M d, Y" }} to {{ admission.end_date|date:"M d, Y" }}</td>
+                                <td>{{ admission.hours }} hrs</td>
+                                <td>{{ admission.slot_timing }}</td>
+                                <td><span class="badge bg-info">{{ admission.seat_type }}</span></td>
+                                <td>₹{{ admission.admission_fees }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3">No admission details found.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Lockers -->
+        <div class="card mt-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="fas fa-lock me-2"></i>Locker Details</h5>
+                <a href="{% url 'locker_create' student.id %}" class="btn btn-sm btn-primary">Assign Locker</a>
+            </div>
+            <div class="card-body">
+                {% if lockers %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Locker No.</th>
+                                <th>Period</th>
+                                <th>Security Fees</th>
+                                <th>Monthly Fees</th>
+                                <th>Required</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for locker in lockers %}
+                            <tr>
+                                <td>{{ locker.locker_number }}</td>
+                                <td>{{ locker.start_date|date:"M d, Y" }} to {{ locker.end_date|date:"M d, Y" }}</td>
+                                <td>₹{{ locker.security_fees }}</td>
+                                <td>₹{{ locker.monthly_fees }}</td>
+                                <td>
+                                    {% if locker.required %}
+                                        <span class="badge bg-success">Yes</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">No</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3">No locker assigned.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Payments -->
+        <div class="card mt-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="fas fa-credit-card me-2"></i>Payment History</h5>
+                <a href="{% url 'payment_create' student.id %}" class="btn btn-sm btn-primary">Record Payment</a>
+            </div>
+            <div class="card-body">
+                {% if payments %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Type</th>
+                                <th>Mode</th>
+                                <th>Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in payments %}
+                            <tr>
+                                <td>{{ payment.payment_date|date:"M d, Y" }}</td>
+                                <td>₹{{ payment.amount }}</td>
+                                <td><span class="badge bg-primary">{{ payment.payment_type }}</span></td>
+                                <td>{{ payment.payment_mode }}</td>
+                                <td>{{ payment.remarks|default:"-" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3">No payments recorded.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

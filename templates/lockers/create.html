@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}Assign Locker - {{ student.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Assign Locker - {{ student.name }}</h2>
+    <a href="{% url 'student_detail' student.id %}" class="btn btn-secondary">Back to Student</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="required" name="required">
+                            <label class="form-check-label" for="required">
+                                <strong>Locker Required (Yes/No)</strong>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="security_fees" class="form-label">Security Fees (Rs)</label>
+                        <input type="number" class="form-control" id="security_fees" name="security_fees" value="300" step="0.01">
+                        <small class="text-muted">Default: ₹300 (editable)</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="start_date" class="form-label">Start Date *</label>
+                        <input type="date" class="form-control" id="start_date" name="start_date" required>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="end_date" class="form-label">End Date *</label>
+                        <input type="date" class="form-control" id="end_date" name="end_date" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="locker_number" class="form-label">Locker Number *</label>
+                        <input type="text" class="form-control" id="locker_number" name="locker_number" required placeholder="e.g., L001">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="monthly_fees" class="form-label">Monthly Fees (Rs)</label>
+                        <input type="number" class="form-control" id="monthly_fees" name="monthly_fees" value="100" step="0.01">
+                        <small class="text-muted">Default: ₹100 (editable)</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-lock me-2"></i>Assign Locker
+                </button>
+                <a href="{% url 'student_detail' student.id %}" class="btn btn-secondary btn-lg ms-2">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

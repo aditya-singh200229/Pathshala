@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+
+{% block title %}Finance Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Finance Dashboard</h2>
+            <span class="text-muted">Monitor revenue and payment analytics</span>
+        </div>
+    </div>
+</div>
+
+<!-- Revenue Cards -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card card-stats revenue-card h-100">
+            <div class="card-body text-center">
+                <div class="mb-2">
+                    <i class="fas fa-dollar-sign fa-2x"></i>
+                </div>
+                <h4>Total Revenue</h4>
+                <h2>₹{{ total_revenue|default:0 }}</h2>
+                <small>{% if percentage_change > 0 %}+{% endif %}{{ percentage_change }}% from last month</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card card-stats students-card h-100">
+            <div class="card-body text-center">
+                <div class="mb-2">
+                    <i class="fas fa-credit-card fa-2x"></i>
+                </div>
+                <h4>Registration Fees</h4>
+                <h2>₹{{ total_registration|default:0 }}</h2>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card card-stats finance-card h-100">
+            <div class="card-body text-center">
+                <div class="mb-2">
+                    <i class="fas fa-chart-line fa-2x"></i>
+                </div>
+                <h4>Admission Fees</h4>
+                <h2>₹{{ total_admission|default:0 }}</h2>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card card-stats locker-card h-100">
+            <div class="card-body text-center">
+                <div class="mb-2">
+                    <i class="fas fa-lock fa-2x"></i>
+                </div>
+                <h4>Locker Fees</h4>
+                <h2>₹{{ total_locker|default:0 }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts and Recent Payments -->
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Revenue Breakdown</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <div class="text-center">
+                            <h6 class="text-muted">Registration</h6>
+                            <h4 class="text-primary">₹{{ total_registration|default:0 }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="text-center">
+                            <h6 class="text-muted">Admission</h6>
+                            <h4 class="text-info">₹{{ total_admission|default:0 }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="text-center">
+                            <h6 class="text-muted">Locker</h6>
+                            <h4 class="text-success">₹{{ total_locker|default:0 }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="text-center">
+                            <h6 class="text-muted">Monthly</h6>
+                            <h4 class="text-warning">₹{{ total_monthly|default:0 }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Recent Payments</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_payments %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Amount</th>
+                                <th>Type</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in recent_payments %}
+                            <tr>
+                                <td>{{ payment.student.name|truncatechars:20 }}</td>
+                                <td>₹{{ payment.amount }}</td>
+                                <td><span class="badge bg-primary">{{ payment.payment_type }}</span></td>
+                                <td>{{ payment.payment_date|date:"M d" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3">No recent payments</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Monthly Revenue -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Monthly Revenue Trend</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center py-4">
+                    <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                    <h5>Chart visualization coming soon</h5>
+                    <p class="text-muted">Monthly revenue breakdown and trend analysis will be displayed here</p>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6>This Month</h6>
+                                    <h4 class="text-primary">₹{{ current_month_revenue|default:0 }}</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6>Growth</h6>
+                                    <h4 class="{% if percentage_change >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                        {% if percentage_change > 0 %}+{% endif %}{{ percentage_change }}%
+                                    </h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6>Total Revenue</h6>
+                                    <h4 class="text-info">₹{{ total_revenue|default:0 }}</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
