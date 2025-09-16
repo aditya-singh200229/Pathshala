@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.db.models import Sum, Count, Q
 from datetime import datetime, timedelta
+from django.utils.timezone import now
 from .models import Student, Admission, Locker, Payment, ContactLead
 from django.core.paginator import Paginator
 
