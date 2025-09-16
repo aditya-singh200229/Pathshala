@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: libraryms
+    env: python
+    buildCommand: |
+      pip install -r requirements.txt
+      python3 manage.py collectstatic --noinput
+      python3 manage.py migrate
+      python3 manage.py createsuperuser --noinput || true
+    startCommand: gunicorn libraryms.wsgi:application --bind 0.0.0.0:$PORT
+    envVars:
+      - key: DJANGO_SUPERUSER_USERNAME
+        value: admin
+      - key: DJANGO_SUPERUSER_EMAIL
+        value: aditya.ajaysingh2002@gmail.com
+      - key: DJANGO_SUPERUSER_PASSWORD
+        value: admin123   # (ya jo bhi password tum rakhna chaho)
+      - key: PYTHON_VERSION
+        value: 3.11
