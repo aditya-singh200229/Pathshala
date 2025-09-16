@@ -82,7 +82,7 @@ def students_list(request):
         )
 
     # --- Pagination logic ---
-    paginator = Paginator(students, 4)  # 20 students per page
+    paginator = Paginator(students, 10)  # 10 students per page
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
 
