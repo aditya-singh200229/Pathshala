@@ -7,10 +7,24 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
         .sidebar {
             background: #2c3e50;
-            min-height: 100vh;
             color: white;
+            width: 250px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+        .sidebar.hidden {
+            transform: translateX(-100%);
         }
         .sidebar .nav-link {
             color: #bdc3c7 !important;
@@ -25,18 +39,28 @@
             background: #3498db;
             color: white !important;
         }
+
         .main-content {
-            background: #ecf0f1;
+            margin-left: 250px;
+            transition: margin-left 0.3s ease;
             min-height: 100vh;
+            background: #ecf0f1;
+            padding: 15px;
         }
+        .main-content.expanded {
+            margin-left: 0;
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+            color: #2c3e50 !important;
+        }
+
+        /* Cards styling */
         .card-stats {
             background: white;
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .navbar-brand {
-            font-weight: bold;
-            color: #2c3e50 !important;
         }
         .finance-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -57,96 +81,108 @@
     </style>
 </head>
 <body>
-    <div class="container-fluid">
-        <div class="row">
-            {% if user.is_authenticated %}
-            <!-- Sidebar -->
-            <nav class="col-md-3 col-lg-2 sidebar">
-                <div class="position-sticky pt-3">
-                    <div class="text-center mb-4">
-                        <h4><i class="fas fa-book"></i> LibraryMS</h4>
-                        <small>Management System</small>
-                    </div>
-                    
-                    <ul class="nav nav-pills flex-column mb-auto">
-                        <li class="nav-item">
-                            <a href="{% url 'dashboard' %}" class="nav-link">
-                                <i class="fas fa-tachometer-alt me-2"></i>
-                                Dashboard
-                            </a>
-                        </li>
-                        
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="studentsDropdown" role="button" data-bs-toggle="collapse" data-bs-target="#studentsCollapse">
-                                <i class="fas fa-users me-2"></i>
-                                Students
-                            </a>
-                            <div class="collapse" id="studentsCollapse">
-                                <ul class="nav nav-pills flex-column ms-3">
-                                    <li><a href="{% url 'students_list' %}" class="nav-link py-2">All Students</a></li>
-                                    <li><a href="{% url 'students_list' %}?filter=active" class="nav-link py-2">Active Students</a></li>
-                                    <li><a href="{% url 'students_list' %}?filter=inactive" class="nav-link py-2">Inactive Students</a></li>
-                                    <li><a href="{% url 'students_list' %}?filter=expiring" class="nav-link py-2">Expiring Soon</a></li>
-                                    <li><a href="{% url 'students_list' %}?filter=reserved" class="nav-link py-2">Reserved</a></li>
-                                    <li><a href="{% url 'students_list' %}?filter=non_reserved" class="nav-link py-2">Non-Reserved</a></li>
-                                </ul>
-                            </div>
-                        </li>
-                        
-                        <li class="nav-item">
-                            <a href="{% url 'contact_leads' %}" class="nav-link">
-                                <i class="fas fa-address-book me-2"></i>
-                                Contact Leads
-                            </a>
-                        </li>
-                        
-                        <li class="nav-item">
-                            <a href="{% url 'finance_dashboard' %}" class="nav-link">
-                                <i class="fas fa-chart-line me-2"></i>
-                                Finance Dashboard
-                            </a>
-                        </li>
-                        
-                        <li class="nav-item mt-4">
-                            <a href="{% url 'logout' %}" class="nav-link">
-                                <i class="fas fa-sign-out-alt me-2"></i>
-                                Logout
-                            </a>
-                        </li>
-                    </ul>
-                    
-                    <div class="mt-4 pt-4 border-top border-secondary text-center">
-                        <small>Welcome, <strong>{{ user.username }}</strong></small><br>
-                        <small class="text-muted">Administrator</small>
-                    </div>
-                </div>
-            </nav>
-            <main class="col-md-9 ms-sm-auto col-lg-10 main-content">
-            {% else %}
-            <main class="col-12">
-            {% endif %}
-                {% if user.is_authenticated %}
-                <div class="pt-3 pb-2 mb-3 border-bottom">
-                    <h1 class="h2">{% block title %}Dashboard{% endblock %}</h1>
-                </div>
-                {% endif %}
+    {% if user.is_authenticated %}
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <div class="position-sticky pt-3">
+            <div class="text-center mb-4">
+                <h4><i class="fas fa-book"></i> LibraryMS</h4>
+                <small>Management System</small>
+            </div>
+
+            <ul class="nav nav-pills flex-column mb-auto">
+                <li class="nav-item">
+                    <a href="{% url 'dashboard' %}" class="nav-link">
+                        <i class="fas fa-tachometer-alt me-2"></i>
+                        Dashboard
+                    </a>
+                </li>
                 
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    {% endfor %}
-                {% endif %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="studentsDropdown" role="button" data-bs-toggle="collapse" data-bs-target="#studentsCollapse">
+                        <i class="fas fa-users me-2"></i>
+                        Students
+                    </a>
+                    <div class="collapse" id="studentsCollapse">
+                        <ul class="nav nav-pills flex-column ms-3">
+                            <li><a href="{% url 'students_list' %}" class="nav-link py-2">All Students</a></li>
+                            <li><a href="{% url 'students_list' %}?filter=active" class="nav-link py-2">Active Students</a></li>
+                            <li><a href="{% url 'students_list' %}?filter=inactive" class="nav-link py-2">Inactive Students</a></li>
+                            <li><a href="{% url 'students_list' %}?filter=expiring" class="nav-link py-2">Expiring Soon</a></li>
+                            <li><a href="{% url 'students_list' %}?filter=reserved" class="nav-link py-2">Reserved</a></li>
+                            <li><a href="{% url 'students_list' %}?filter=non_reserved" class="nav-link py-2">Non-Reserved</a></li>
+                        </ul>
+                    </div>
+                </li>
                 
-                {% block content %}
-                {% endblock %}
-            </main>
+                <li class="nav-item">
+                    <a href="{% url 'contact_leads' %}" class="nav-link">
+                        <i class="fas fa-address-book me-2"></i>
+                        Contact Leads
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a href="{% url 'finance_dashboard' %}" class="nav-link">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Finance Dashboard
+                    </a>
+                </li>
+                
+                <li class="nav-item mt-4">
+                    <a href="{% url 'logout' %}" class="nav-link">
+                        <i class="fas fa-sign-out-alt me-2"></i>
+                        Logout
+                    </a>
+                </li>
+            </ul>
+            
+            <div class="mt-4 pt-4 border-top border-secondary text-center">
+                <small>Welcome, <strong>{{ user.username }}</strong></small><br>
+                <small class="text-muted">Administrator</small>
+            </div>
         </div>
-    </div>
-    
+    </nav>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="main-content {% if not user.is_authenticated %}expanded{% endif %}" id="mainContent">
+        {% if user.is_authenticated %}
+        <!-- Top bar with toggle -->
+        <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
+            <button class="btn btn-sm btn-outline-primary" id="toggleSidebar">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1 class="h5 m-0">{% block title %}Dashboard{% endblock %}</h1>
+        </div>
+        {% endif %}
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show mt-2" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% block content %}
+        {% endblock %}
+    </main>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const toggleBtn = document.getElementById("toggleSidebar");
+        const sidebar = document.getElementById("sidebar");
+        const mainContent = document.getElementById("mainContent");
+
+        if (toggleBtn) {
+            toggleBtn.addEventListener("click", () => {
+                sidebar.classList.toggle("hidden");
+                mainContent.classList.toggle("expanded");
+            });
+        }
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

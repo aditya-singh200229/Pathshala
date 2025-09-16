@@ -52,8 +52,25 @@ def dashboard(request):
 
 @login_required
 def students_list(request):
+    # --- Auto status update logic ---
+    today = now().date()
+    expiring_date = today + timedelta(days=15)
+
+    # Expiring Soon (15 din ke andar)
+    Student.objects.filter(
+        admissions__end_date__lte=expiring_date,
+        admissions__end_date__gte=today
+    ).update(status='Expiring Soon')
+
+    # Inactive (end_date cross ho chuka)
+    Student.objects.filter(
+        admissions__end_date__lt=today
+    ).update(status='Inactive')
+
+    # --- Normal students listing logic ---
     filter_type = request.GET.get('filter', 'all')
-    
+    search_query = request.GET.get('q', '')
+
     if filter_type == 'active':
         students = Student.objects.filter(status='Active')
     elif filter_type == 'inactive':
@@ -66,17 +83,26 @@ def students_list(request):
         students = Student.objects.filter(admissions__seat_type='Non-Reserved').distinct()
     else:
         students = Student.objects.all()
-    
+
+    if search_query:
+        students = students.filter(
+            Q(id__icontains=search_query) |
+            Q(name__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(mobile__icontains=search_query) |
+            Q(aadhaar_number__icontains=search_query)
+        )
+
     paginator = Paginator(students, 20)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    
+
     context = {
         'students': page_obj,
         'filter_type': filter_type,
+        'search_query': search_query,
     }
     return render(request, 'students/list.html', context)
-
 @login_required
 def student_detail(request, student_id):
     student = get_object_or_404(Student, id=student_id)
@@ -362,3 +388,42 @@ def finance_dashboard(request):
         'recent_payments': recent_payments,
     }
     return render(request, 'finance/dashboard.html', context)
+
+@login_required
+def students_list(request):
+    filter_type = request.GET.get('filter', 'all')
+    search_query = request.GET.get('q', '')  # search box se value
+    
+    if filter_type == 'active':
+        students = Student.objects.filter(status='Active')
+    elif filter_type == 'inactive':
+        students = Student.objects.filter(status='Inactive')
+    elif filter_type == 'expiring':
+        students = Student.objects.filter(status='Expiring Soon')
+    elif filter_type == 'reserved':
+        students = Student.objects.filter(admissions__seat_type='Reserved').distinct()
+    elif filter_type == 'non_reserved':
+        students = Student.objects.filter(admissions__seat_type='Non-Reserved').distinct()
+    else:
+        students = Student.objects.all()
+    
+    # 🔍 Search functionality
+    if search_query:
+        students = students.filter(
+            Q(id__icontains=search_query) |
+            Q(name__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(mobile__icontains=search_query) |
+            Q(aadhaar_number__icontains=search_query)
+        )
+
+    paginator = Paginator(students, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'students': page_obj,
+        'filter_type': filter_type,
+        'search_query': search_query,
+    }
+    return render(request, 'students/list.html', context)

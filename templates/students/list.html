@@ -3,6 +3,7 @@
 {% block title %}Students List{% endblock %}
 
 {% block content %}
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Students 
         {% if filter_type == 'active' %}(Active)
@@ -17,6 +18,11 @@
         <i class="fas fa-plus me-2"></i>Add Student
     </a>
 </div>
+<form method="get" action="{% url 'students_list' %}" class="mb-3 d-flex">
+    <input type="text" name="q" value="{{ search_query }}" class="form-control me-2" placeholder="Search students...">
+    <input type="hidden" name="filter" value="{{ filter_type }}">
+    <button type="submit" class="btn btn-primary">Search</button>
+</form>
 
 <div class="card">
     <div class="card-body">
@@ -25,6 +31,7 @@
             <table class="table table-hover">
                 <thead class="table-dark">
                     <tr>
+                        <th>ID</th>
                         <th>Name</th>
                         <th>Email</th>
                         <th>Mobile</th>
@@ -37,6 +44,10 @@
                 <tbody>
                     {% for student in students %}
                     <tr>
+                        <td>
+                            <strong>{{ student.id }}</strong><br>
+                            
+                        </td>
                         <td>
                             <strong>{{ student.name }}</strong><br>
                             <small class="text-muted">{{ student.aadhaar_number }}</small>
