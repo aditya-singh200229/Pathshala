@@ -30,6 +30,28 @@ def user_logout(request):
 
 @login_required
 def dashboard(request):
+    # Cleanup expired admissions
+    today = now().date()
+    expired_admissions = Admission.objects.filter(end_date__lt=today)
+
+    for admission in expired_admissions:
+        student = admission.student
+        # Unassign lockers for this student (delete Locker records, but keep TotalLockers entities)
+        lockers_to_unassign = Locker.objects.filter(student=student)
+        for locker in lockers_to_unassign:
+            # Mark the underlying TotalLockers as available again
+            locker.total_locker.is_available = True
+            locker.total_locker.save()
+            # Delete the Locker record to remove the assignment
+            locker.delete()
+        
+        # Delete the admission
+        admission.delete()
+        
+        # Update student status to Inactive
+        student.status = 'Inactive'
+        student.save()
+
     # Finance calculations
     total_registration = Payment.objects.filter(payment_type='Registration').aggregate(Sum('amount'))['amount__sum'] or 0
     total_admission = Payment.objects.filter(payment_type='Admission').aggregate(Sum('amount'))['amount__sum'] or 0
@@ -53,7 +75,6 @@ def dashboard(request):
         'expiring_soon': expiring_soon,
     }
     return render(request, 'dashboard.html', context)
-
 @login_required
 def students_list(request):
     filter_type = request.GET.get('filter', 'all')
@@ -131,6 +152,7 @@ def student_create(request):
                 mother_name=request.POST['mother_name'],
                 parent_mobile=request.POST['parent_mobile'],
                 registration_fees=request.POST.get('registration_fees', 200.00),
+                status='Inactive',  # Set default status to Inactive
                 photo=request.FILES.get('photo')
             )
             messages.success(request, 'Student added successfully!')
@@ -203,6 +225,9 @@ def admission_create(request, student_id):
                 seat_type=request.POST['seat_type'],
                 admission_fees=request.POST.get('admission_fees', 1900.00)
             )
+            # Update student status to Active
+            student.status = 'Active'
+            student.save()
             messages.success(request, 'Admission details added successfully!')
             return redirect('student_detail', student_id=student.id)
         except Exception as e:
