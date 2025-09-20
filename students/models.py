@@ -50,20 +50,16 @@ class Admission(models.Model):
         ('4', '4 Hours'),
         ('6', '6 Hours'),
         ('8', '8 Hours'),
-    ]
-    
-    SLOT_CHOICES = [
-        ('Morning', 'Morning (6:00 AM - 12:00 PM)'),
-        ('Afternoon', 'Afternoon (12:00 PM - 6:00 PM)'),
-        ('Evening', 'Evening (6:00 PM - 10:00 PM)'),
-        ('Night', 'Night (10:00 PM - 6:00 AM)'),
+        ('10', '10 Hours'),
+        ('12', '12 Hours'),
+        ('15', 'Full Day'),
     ]
     
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='admissions')
     start_date = models.DateField()
     end_date = models.DateField()
     hours = models.CharField(max_length=2, choices=HOUR_CHOICES, default='2')
-    slot_timing = models.CharField(max_length=20, choices=SLOT_CHOICES, default='Morning')
+    slot_timing = models.CharField(max_length=20)
     seat_number = models.CharField(max_length=10)
     seat_type = models.CharField(max_length=20, choices=Student.SEAT_CHOICES, default='Non-Reserved')
     admission_fees = models.DecimalField(max_digits=10, decimal_places=2, default=1900.00)

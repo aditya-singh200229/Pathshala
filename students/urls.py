@@ -19,4 +19,6 @@ urlpatterns = [
     path('payments/<int:payment_id>/delete/', views.payment_delete, name='payment_delete'),
     path('leads/', views.contact_leads, name='contact_leads'),
     path('finance/', views.finance_dashboard, name='finance_dashboard'),
+    path('students/export-csv/', views.export_students_csv, name='export_students_csv'),
+  
 ]
