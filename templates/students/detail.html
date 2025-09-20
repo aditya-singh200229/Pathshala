@@ -125,7 +125,7 @@
                         <tbody>
                             {% for locker in lockers %}
                             <tr>
-                                <td>{{ locker.locker_number }}</td>
+                                <td>{{ locker.total_locker.locker_number }}</td>
                                 <td>{{ locker.start_date|date:"M d, Y" }} to {{ locker.end_date|date:"M d, Y" }}</td>
                                 <td>₹{{ locker.security_fees }}</td>
                                 <td>₹{{ locker.monthly_fees }}</td>
