@@ -20,5 +20,6 @@ urlpatterns = [
     path('leads/', views.contact_leads, name='contact_leads'),
     path('finance/', views.finance_dashboard, name='finance_dashboard'),
     path('students/export-csv/', views.export_students_csv, name='export_students_csv'),
-  
+    path('add-locker/', views.add_locker, name='add_locker'),
+    path('lockers/', views.lockers_list, name='lockers_list'),
 ]
