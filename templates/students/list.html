@@ -14,13 +14,25 @@
         {% else %}(All)
         {% endif %}
     </h2>
-    <a href="{% url 'student_create' %}" class="btn btn-primary">
-        <i class="fas fa-plus me-2"></i>Add Student
-    </a>
+    <div>
+        <a href="{% url 'student_create' %}" class="btn btn-primary me-2">
+            <i class="fas fa-plus me-2"></i>Add Student
+        </a>
+        <a href="{% url 'export_students_csv' %}?{{ query_string }}" class="btn btn-success">
+            <i class="fas fa-download me-2"></i>Export CSV
+        </a>
+    </div>
 </div>
 <form method="get" action="{% url 'students_list' %}" class="mb-3 d-flex">
     <input type="text" name="q" value="{{ search_query }}" class="form-control me-2" placeholder="Search students...">
     <input type="hidden" name="filter" value="{{ filter_type }}">
+    <h6>Filter By Study Hours</h6>
+    <select name="hours" class="form-control me-2" style="width: 150px;" onchange="this.form.submit()">
+        <option value="" {% if not hours_filter %}selected{% endif %}>All Hours</option>
+        {% for hour, label in hour_choices %}
+            <option value="{{ hour }}" {% if hours_filter == hour %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
     <button type="submit" class="btn btn-primary">Search</button>
 </form>
 
@@ -28,39 +40,42 @@
     <div class="card-body">
         {% if students %}
         <div class="table-responsive">
-            <table class="table table-hover">
+            <table class="table table-hover" style="table-layout: fixed; width: 100%;">
                 <thead class="table-dark">
                     <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Mobile</th>
-                        <th>Status</th>
-                        <th>Registration Fees</th>
-                        <th>Date Added</th>
-                        <th>Actions</th>
+                        <th style="width: 5%;">ID</th>
+                        <th style="width: 15%;">Name</th>
+                        <th style="width: 10%;">Photo</th>
+                        <th style="width: 15%;">Mobile</th>
+                        <th style="width: 7%;">Status</th>
+                        <th style="width: 10%;">Date Added</th>
+                        <th style="width: 15%;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for student in students %}
                     <tr>
-                        <td>
+                        <td style="word-wrap: break-word;">
                             <strong>{{ student.id }}</strong><br>
-                            
                         </td>
-                        <td>
+                        <td style="word-wrap: break-word;">
                             <strong>{{ student.name }}</strong><br>
                             <small class="text-muted">{{ student.aadhaar_number }}</small>
                         </td>
-                        <td>{{ student.email }}</td>
-                        <td>{{ student.mobile }}</td>
+                        <td>
+                            {% if student.photo %}
+                                <img src="{{ student.photo.url }}" alt="{{ student.name }}'s photo" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                            {% else %}
+                                <img src="/media/student_photos/user.jpg" alt="Default avatar" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                            {% endif %}
+                        </td>
+                        <td style="word-wrap: break-word;">{{ student.mobile }}</td>
                         <td>
                             <span class="badge {% if student.status == 'Active' %}bg-success{% elif student.status == 'Inactive' %}bg-danger{% else %}bg-warning{% endif %}">
                                 {{ student.status }}
                             </span>
                         </td>
-                        <td>₹{{ student.registration_fees }}</td>
-                        <td>{{ student.created_at|date:"M d, Y" }}</td>
+                        <td style="word-wrap: break-word;">{{ student.created_at|date:"M d, Y" }}</td>
                         <td>
                             <a href="{% url 'student_detail' student.id %}" class="btn btn-sm btn-info me-1">
                                 <i class="fas fa-eye"></i> View

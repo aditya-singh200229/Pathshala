@@ -2,12 +2,15 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.db.models import Sum, Count, Q
 from datetime import datetime, timedelta
 from django.utils.timezone import now
 from .models import Student, Admission, Locker, Payment, ContactLead
 from django.core.paginator import Paginator
+import csv
+from django.core.serializers.json import DjangoJSONEncoder
+import json
 
 def user_login(request):
     if request.method == 'POST':
@@ -51,11 +54,11 @@ def dashboard(request):
     }
     return render(request, 'dashboard.html', context)
 
-
 @login_required
 def students_list(request):
     filter_type = request.GET.get('filter', 'all')
-    search_query = request.GET.get('q', '')  # search box se value
+    search_query = request.GET.get('q', '')
+    hours_filter = request.GET.get('hours', '')  # New filter for admission hours
     
     # --- Filter logic ---
     if filter_type == 'active':
@@ -71,14 +74,15 @@ def students_list(request):
     else:
         students = Student.objects.all()
     
+    # --- Hours filter logic ---
+    if hours_filter:
+        students = students.filter(admissions__hours=hours_filter).distinct()
+    
     # --- Search logic ---
     if search_query:
         students = students.filter(
             Q(id__icontains=search_query) |
-            Q(name__icontains=search_query) |
-            Q(email__icontains=search_query) |
-            Q(mobile__icontains=search_query) |
-            Q(aadhaar_number__icontains=search_query)
+            Q(name__icontains=search_query)
         )
 
     # --- Pagination logic ---
@@ -86,7 +90,7 @@ def students_list(request):
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
 
-    # Preserve query params in pagination (so filter + search remains)
+    # Preserve query params in pagination (so filter + search + hours remains)
     query_params = request.GET.copy()
     if 'page' in query_params:
         del query_params['page']
@@ -96,7 +100,9 @@ def students_list(request):
         'students': page_obj,
         'filter_type': filter_type,
         'search_query': search_query,
+        'hours_filter': hours_filter,
         'query_string': query_string,
+        'hour_choices': Admission.HOUR_CHOICES, 
     }
     return render(request, 'students/list.html', context)
 
@@ -191,6 +197,10 @@ def admission_create(request, student_id):
     
     if request.method == 'POST':
         try:
+            # Check for existing admission and delete it
+            Admission.objects.filter(student=student).delete()
+            
+            # Create new admission
             admission = Admission.objects.create(
                 student=student,
                 start_date=request.POST['start_date'],
@@ -386,3 +396,105 @@ def finance_dashboard(request):
     }
     return render(request, 'finance/dashboard.html', context)
 
+@login_required
+def export_students_csv(request):
+    filter_type = request.GET.get('filter', 'all')
+    search_query = request.GET.get('q', '')
+    hours_filter = request.GET.get('hours', '')
+
+    # --- Filter logic ---
+    if filter_type == 'active':
+        students = Student.objects.filter(status='Active')
+    elif filter_type == 'inactive':
+        students = Student.objects.filter(status='Inactive')
+    elif filter_type == 'expiring':
+        students = Student.objects.filter(status='Expiring Soon')
+    elif filter_type == 'reserved':
+        students = Student.objects.filter(admissions__seat_type='Reserved').distinct()
+    elif filter_type == 'non_reserved':
+        students = Student.objects.filter(admissions__seat_type='Non-Reserved').distinct()
+    else:
+        students = Student.objects.all()
+
+    # --- Hours filter logic ---
+    if hours_filter:
+        students = students.filter(admissions__hours=hours_filter).distinct()
+
+    # --- Search logic ---
+    if search_query:
+        students = students.filter(
+            Q(id__icontains=search_query) |
+            Q(name__icontains=search_query)
+        )
+
+    # Prefetch related data to optimize queries
+    students = students.prefetch_related('admissions', 'lockers', 'payments')
+
+    # Create the HttpResponse object with CSV header
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="students_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv"'
+
+    writer = csv.writer(response)
+    # Write the header row
+    writer.writerow([
+        'ID', 'Name', 'Email', 'Mobile', 'Date of Birth', 'Aadhaar Number', 'Address',
+        'Father Name', 'Mother Name', 'Parent Mobile', 'Registration Fees', 'Status',
+        'Date Added', 'Photo URL', 'Admissions', 'Lockers', 'Payments'
+    ])
+
+    # Write data rows
+    for student in students:
+        admissions_data = json.dumps([
+            {
+                'start_date': a.start_date.strftime('%Y-%m-%d') if a.start_date else '',
+                'end_date': a.end_date.strftime('%Y-%m-%d') if a.end_date else '',
+                'hours': a.hours,
+                'slot_timing': a.slot_timing,
+                'seat_number': a.seat_number,
+                'seat_type': a.seat_type,
+                'admission_fees': str(a.admission_fees)
+            } for a in student.admissions.all()
+        ], cls=DjangoJSONEncoder)
+
+        lockers_data = json.dumps([
+            {
+                'required': l.required,
+                'security_fees': str(l.security_fees),
+                'start_date': l.start_date.strftime('%Y-%m-%d') if l.start_date else '',
+                'end_date': l.end_date.strftime('%Y-%m-%d') if l.end_date else '',
+                'locker_number': l.locker_number,
+                'monthly_fees': str(l.monthly_fees)
+            } for l in student.lockers.all()
+        ], cls=DjangoJSONEncoder)
+
+        payments_data = json.dumps([
+            {
+                'amount': str(p.amount),
+                'payment_date': p.payment_date.strftime('%Y-%m-%d') if p.payment_date else '',
+                'payment_mode': p.payment_mode,
+                'payment_type': p.payment_type,
+                'remarks': p.remarks
+            } for p in student.payments.all()
+        ], cls=DjangoJSONEncoder)
+
+        writer.writerow([
+            student.id,
+            student.name,
+            student.email,
+            student.mobile,
+            student.date_of_birth.strftime('%Y-%m-%d') if student.date_of_birth else '',
+            student.aadhaar_number,
+            student.address,
+            student.father_name,
+            student.mother_name,
+            student.parent_mobile,
+            str(student.registration_fees),
+            student.status,
+            student.created_at.strftime('%Y-%m-%d'),
+            student.photo.url if student.photo else '',
+            admissions_data,
+            lockers_data,
+            payments_data
+        ])
+
+    return response
