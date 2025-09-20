@@ -6,7 +6,7 @@ from django.http import JsonResponse, HttpResponse
 from django.db.models import Sum, Count, Q
 from datetime import datetime, timedelta
 from django.utils.timezone import now
-from .models import Student, Admission, Locker, Payment, ContactLead
+from .models import Student, Admission, Locker, Payment, ContactLead, TotalLockers
 from django.core.paginator import Paginator
 import csv
 from django.core.serializers.json import DjangoJSONEncoder
@@ -58,9 +58,8 @@ def dashboard(request):
 def students_list(request):
     filter_type = request.GET.get('filter', 'all')
     search_query = request.GET.get('q', '')
-    hours_filter = request.GET.get('hours', '')  # New filter for admission hours
+    hours_filter = request.GET.get('hours', '')
     
-    # --- Filter logic ---
     if filter_type == 'active':
         students = Student.objects.filter(status='Active')
     elif filter_type == 'inactive':
@@ -74,23 +73,19 @@ def students_list(request):
     else:
         students = Student.objects.all()
     
-    # --- Hours filter logic ---
     if hours_filter:
         students = students.filter(admissions__hours=hours_filter).distinct()
     
-    # --- Search logic ---
     if search_query:
         students = students.filter(
             Q(id__icontains=search_query) |
             Q(name__icontains=search_query)
         )
 
-    # --- Pagination logic ---
-    paginator = Paginator(students, 10)  # 10 students per page
+    paginator = Paginator(students, 10)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
 
-    # Preserve query params in pagination (so filter + search + hours remains)
     query_params = request.GET.copy()
     if 'page' in query_params:
         del query_params['page']
@@ -102,7 +97,7 @@ def students_list(request):
         'search_query': search_query,
         'hours_filter': hours_filter,
         'query_string': query_string,
-        'hour_choices': Admission.HOUR_CHOICES, 
+        'hour_choices': Admission.HOUR_CHOICES,
     }
     return render(request, 'students/list.html', context)
 
@@ -197,10 +192,7 @@ def admission_create(request, student_id):
     
     if request.method == 'POST':
         try:
-            # Check for existing admission and delete it
             Admission.objects.filter(student=student).delete()
-            
-            # Create new admission
             admission = Admission.objects.create(
                 student=student,
                 start_date=request.POST['start_date'],
@@ -225,21 +217,26 @@ def locker_create(request, student_id):
     
     if request.method == 'POST':
         try:
+            locker_number = request.POST['locker_number']
+            total_locker = get_object_or_404(TotalLockers, locker_number=locker_number, is_available=True)
             locker = Locker.objects.create(
                 student=student,
+                total_locker=total_locker,
                 required=request.POST.get('required') == 'on',
                 security_fees=request.POST.get('security_fees', 300.00),
                 start_date=request.POST['start_date'],
                 end_date=request.POST['end_date'],
-                locker_number=request.POST['locker_number'],
                 monthly_fees=request.POST.get('monthly_fees', 100.00)
             )
             messages.success(request, 'Locker assigned successfully!')
             return redirect('student_detail', student_id=student.id)
+        except TotalLockers.DoesNotExist:
+            messages.error(request, 'Selected locker is not available.')
         except Exception as e:
             messages.error(request, f'Error creating locker: {str(e)}')
     
-    context = {'student': student}
+    available_lockers = TotalLockers.objects.filter(is_available=True)
+    context = {'student': student, 'available_lockers': available_lockers}
     return render(request, 'lockers/create.html', context)
 
 @login_required
@@ -252,7 +249,6 @@ def locker_update(request, locker_id):
             locker.security_fees = request.POST.get('security_fees', 300.00)
             locker.start_date = request.POST['start_date']
             locker.end_date = request.POST['end_date']
-            locker.locker_number = request.POST['locker_number']
             locker.monthly_fees = request.POST.get('monthly_fees', 100.00)
             
             locker.save()
@@ -353,7 +349,6 @@ def contact_leads(request):
 
 @login_required
 def finance_dashboard(request):
-    # Monthly revenue calculation
     today = datetime.now()
     current_month_start = today.replace(day=1)
     last_month_start = (current_month_start - timedelta(days=1)).replace(day=1)
@@ -367,13 +362,8 @@ def finance_dashboard(request):
         payment_date__lt=current_month_start
     ).aggregate(Sum('amount'))['amount__sum'] or 0
     
-    # Calculate percentage change
-    if last_month_revenue > 0:
-        percentage_change = ((current_month_revenue - last_month_revenue) / last_month_revenue) * 100
-    else:
-        percentage_change = 100 if current_month_revenue > 0 else 0
+    percentage_change = ((current_month_revenue - last_month_revenue) / last_month_revenue * 100) if last_month_revenue > 0 else (100 if current_month_revenue > 0 else 0)
     
-    # Revenue breakdown
     total_registration = Payment.objects.filter(payment_type='Registration').aggregate(Sum('amount'))['amount__sum'] or 0
     total_admission = Payment.objects.filter(payment_type='Admission').aggregate(Sum('amount'))['amount__sum'] or 0
     total_locker = Payment.objects.filter(payment_type='Locker').aggregate(Sum('amount'))['amount__sum'] or 0
@@ -381,7 +371,6 @@ def finance_dashboard(request):
     
     total_revenue = total_registration + total_admission + total_locker + total_monthly
     
-    # Recent payments
     recent_payments = Payment.objects.all()[:10]
     
     context = {
@@ -402,7 +391,6 @@ def export_students_csv(request):
     search_query = request.GET.get('q', '')
     hours_filter = request.GET.get('hours', '')
 
-    # --- Filter logic ---
     if filter_type == 'active':
         students = Student.objects.filter(status='Active')
     elif filter_type == 'inactive':
@@ -416,33 +404,27 @@ def export_students_csv(request):
     else:
         students = Student.objects.all()
 
-    # --- Hours filter logic ---
     if hours_filter:
         students = students.filter(admissions__hours=hours_filter).distinct()
 
-    # --- Search logic ---
     if search_query:
         students = students.filter(
             Q(id__icontains=search_query) |
             Q(name__icontains=search_query)
         )
 
-    # Prefetch related data to optimize queries
     students = students.prefetch_related('admissions', 'lockers', 'payments')
 
-    # Create the HttpResponse object with CSV header
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = f'attachment; filename="students_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv"'
 
     writer = csv.writer(response)
-    # Write the header row
     writer.writerow([
         'ID', 'Name', 'Email', 'Mobile', 'Date of Birth', 'Aadhaar Number', 'Address',
         'Father Name', 'Mother Name', 'Parent Mobile', 'Registration Fees', 'Status',
         'Date Added', 'Photo URL', 'Admissions', 'Lockers', 'Payments'
     ])
 
-    # Write data rows
     for student in students:
         admissions_data = json.dumps([
             {
@@ -462,7 +444,7 @@ def export_students_csv(request):
                 'security_fees': str(l.security_fees),
                 'start_date': l.start_date.strftime('%Y-%m-%d') if l.start_date else '',
                 'end_date': l.end_date.strftime('%Y-%m-%d') if l.end_date else '',
-                'locker_number': l.locker_number,
+                'locker_number': l.total_locker.locker_number,
                 'monthly_fees': str(l.monthly_fees)
             } for l in student.lockers.all()
         ], cls=DjangoJSONEncoder)
@@ -498,3 +480,49 @@ def export_students_csv(request):
         ])
 
     return response
+
+@login_required
+def lockers_list(request):
+    search_query = request.GET.get('q', '')
+    assigned_lockers = Locker.objects.select_related('student', 'total_locker')
+    available_lockers = TotalLockers.objects.filter(is_available=True)
+
+    if search_query:
+        assigned_lockers = assigned_lockers.filter(
+            Q(student__name__icontains=search_query) |
+            Q(total_locker__locker_number__icontains=search_query)
+        )
+        available_lockers = available_lockers.filter(
+            locker_number__icontains=search_query
+        )
+
+    paginator_assigned = Paginator(assigned_lockers, 10)
+    page_number_assigned = request.GET.get('page_assigned', 1)
+    page_obj_assigned = paginator_assigned.get_page(page_number_assigned)
+
+    paginator_available = Paginator(available_lockers, 10)
+    page_number_available = request.GET.get('page_available', 1)
+    page_obj_available = paginator_available.get_page(page_number_available)
+
+    context = {
+        'assigned_lockers': page_obj_assigned,
+        'available_lockers': page_obj_available,
+        'search_query': search_query,
+    }
+    return render(request, 'lockers/list.html', context)
+
+
+@login_required
+def add_locker(request):
+    if request.method == 'POST':
+        try:
+            locker_number = request.POST['new_locker_number']
+            if TotalLockers.objects.filter(locker_number=locker_number).exists():
+                messages.error(request, 'Locker number already exists.')
+            else:
+                TotalLockers.objects.create(locker_number=locker_number, is_available=True)
+                messages.success(request, f'Locker {locker_number} added successfully!')
+            return redirect('lockers_list')
+        except Exception as e:
+            messages.error(request, f'Error adding locker: {str(e)}')
+    return redirect('lockers_list')

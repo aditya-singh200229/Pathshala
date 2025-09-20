@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}Lockers Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Lockers Management Available Lockers ({{ available_lockers.paginator.count }})</h2>
+        <div>
+            <button class="btn btn-primary me-2" onclick="showAddLockerForm()">
+                <i class="fas fa-plus me-2"></i>Add New Locker
+            </button>
+        </div>
+    </div>
+
+    <!-- Add New Locker Form (Hidden by default) -->
+    <div id="addLockerForm" style="display:none;">
+        <h3>Add New Locker</h3>
+        <form method="post" action="{% url 'add_locker' %}">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="new_locker_number" class="form-label">Locker Number</label>
+                <input type="text" name="new_locker_number" id="new_locker_number" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Add Locker</button>
+            <button type="button" class="btn btn-secondary" onclick="hideAddLockerForm()">Cancel</button>
+        </form>
+    </div>
+
+    <!-- Search Form -->
+    <form method="get" class="mb-4">
+        <div class="input-group">
+            <input type="text" name="q" class="form-control" placeholder="Search by student name or locker number" value="{{ search_query }}">
+            <button type="submit" class="btn btn-primary">Search</button>
+        </div>
+    </form>
+
+    <!-- Assigned Lockers -->
+    <h3>Assigned Lockers ({{ assigned_lockers.paginator.count }})</h3>
+    {% if assigned_lockers %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Locker Number</th>
+                <th>Student Name</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for locker in assigned_lockers %}
+            <tr>
+                <td>{{ locker.total_locker.locker_number }}</td>
+                <td>{{ locker.student.name }}</td>
+                <td>{{ locker.start_date|date:"Y-m-d" }}</td>
+                <td>{{ locker.end_date|date:"Y-m-d" }}</td>
+                <td>
+                    <a href="{% url 'locker_update' locker.id %}" class="btn btn-sm btn-warning">Edit</a>
+                    <a href="{% url 'locker_delete' locker.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% include 'pagination.html' with page_obj=assigned_lockers page_var='page_assigned' %}
+    {% else %}
+    <p>No assigned lockers found.</p>
+    {% endif %}
+
+    <!-- JavaScript for Toggle Form -->
+    <script>
+        function showAddLockerForm() {
+            document.getElementById('addLockerForm').style.display = 'block';
+        }
+        function hideAddLockerForm() {
+            document.getElementById('addLockerForm').style.display = 'none';
+        }
+    </script>
+</div>
+{% endblock %}

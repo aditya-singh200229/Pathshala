@@ -73,23 +73,49 @@ class Admission(models.Model):
     class Meta:
         ordering = ['-created_at']
 
+class TotalLockers(models.Model):
+    locker_number = models.CharField(max_length=10, unique=True)  # e.g., "L001", "L002", etc.
+    is_available = models.BooleanField(default=True)  # Tracks if the locker is available
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return self.locker_number
+    
+    class Meta:
+        verbose_name_plural = "Total Lockers"
+        ordering = ['locker_number']
+
 class Locker(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='lockers')
+    total_locker = models.OneToOneField(TotalLockers, on_delete=models.CASCADE, related_name='assigned_locker')
     required = models.BooleanField()
     security_fees = models.DecimalField(max_digits=10, decimal_places=2, default=300.00)
     start_date = models.DateField()
     end_date = models.DateField()
-    locker_number = models.CharField(max_length=10, unique=True)
     monthly_fees = models.DecimalField(max_digits=10, decimal_places=2, default=100.00)
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
     def __str__(self):
-        return f"Locker {self.locker_number} - {self.student.name}"
+        return f"{self.student.name} - {self.total_locker.locker_number}"
     
     class Meta:
-        ordering = ['locker_number']
+        ordering = ['total_locker__locker_number']
+
+    def save(self, *args, **kwargs):
+        if not self.pk and self.total_locker:  # Only on creation
+            self.total_locker.is_available = False
+            self.total_locker.save()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        if self.total_locker:
+            self.total_locker.is_available = True
+            self.total_locker.save()
+        super().delete(*args, **kwargs)
 
 class Payment(models.Model):
     PAYMENT_MODE_CHOICES = [

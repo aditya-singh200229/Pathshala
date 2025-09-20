@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Student, Admission, Locker, Payment, ContactLead
+from .models import Student, Admission, Locker, Payment, ContactLead, TotalLockers
 
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
@@ -32,10 +32,15 @@ class AdmissionAdmin(admin.ModelAdmin):
 
 @admin.register(Locker)
 class LockerAdmin(admin.ModelAdmin):
-    list_display = ['locker_number', 'student', 'required', 'start_date', 'end_date', 'monthly_fees']
+    list_display = ['total_locker_locker_number', 'student', 'required', 'start_date', 'end_date', 'monthly_fees']
     list_filter = ['required', 'start_date', 'end_date']
-    search_fields = ['locker_number', 'student__name']
+    search_fields = ['total_locker__locker_number', 'student__name']
     readonly_fields = ['created_at', 'updated_at']
+
+    # Custom method to display locker_number from total_locker
+    def total_locker_locker_number(self, obj):
+        return obj.total_locker.locker_number if obj.total_locker else ''
+    total_locker_locker_number.short_description = 'Locker Number'
 
 @admin.register(Payment)
 class PaymentAdmin(admin.ModelAdmin):
@@ -51,3 +56,11 @@ class ContactLeadAdmin(admin.ModelAdmin):
     list_filter = ['status', 'created_at']
     search_fields = ['name', 'email', 'mobile']
     readonly_fields = ['created_at', 'updated_at']
+
+@admin.register(TotalLockers)
+class TotalLockersAdmin(admin.ModelAdmin):
+    list_display = ['locker_number', 'is_available', 'created_at', 'updated_at']
+    list_filter = ['is_available', 'created_at']
+    search_fields = ['locker_number']
+    readonly_fields = ['created_at', 'updated_at']
+    actions = ['make_available', 'make_unavailable']
